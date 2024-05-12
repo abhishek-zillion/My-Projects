@@ -13,7 +13,6 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout, authenticate
 from rest_framework import generics
 from django.utils import timezone
-
 from library.tasks import process_book_return,notify_librarian,book_request_count
 from .signals import *
 
@@ -39,6 +38,8 @@ class UserLoginView(APIView):
                 username=serializer.validated_data['username'],
                 password=serializer.validated_data['password']
             )
+            reqs_upon_history=BookRequest.objects.filter(book__title='Sanskrit',returned_date=None)
+            print(reqs_upon_history)
             if user:
                 login(request, user)
                 student=request.user

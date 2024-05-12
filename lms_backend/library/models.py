@@ -6,7 +6,23 @@ from datetime import timedelta
 
 # Create your models here.
 
+class TimeStampModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    modified_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+    
+    class Meta:
+        abstract =True
 
+class HomeCityChoices(models.Choices):
+    SURAT='surat'
+    BHARUCH='bharuch'
+    BENGALURU='bengaluru'
+    MUMBAI='mumbai'
+    DELHI='delhi'
+    KOLKATA='kolkata'
+    HYDERABAD='hyderabad'
+    CHANDIGARH='chandigarh'
+    
 class User(AbstractUser):
     STUDENT = 'STUDENT'
     LIBRARIAN = 'LIBRARIAN'
@@ -55,6 +71,11 @@ class BookRequest(models.Model):
     due_date=models.DateTimeField(null=True, blank=True)
     returned_date=models.DateTimeField(null=True, blank=True)    
     
+    class Meta:
+        indexes = [
+            models.Index(fields=['user','status'],name='user_status_idx')
+        ]
+    
     def approve_request(self):
         if  self.status==self.PENDING:
             self.status = self.APPROVED
@@ -91,5 +112,14 @@ class BookRequest(models.Model):
     def __str__(self) -> str:
         return self.book.title
 
-
+class UserProfile(TimeStampModel):
+    user = models.OneToOneField(User,verbose_name='user_detail',related_name='user_profile',on_delete=models.PROTECT)
+    home_city = models.CharField(choices=HomeCityChoices.choices,max_length=50,blank=True,null=True)
     
+class Tag(models.Model):
+    id=models.AutoField(primary_key=True)
+    tag_type = models.CharField(max_length=50,blank=True,null=True)
+    book = models.ManyToManyField(Book,related_name='tags',related_query_name='tag')
+    
+    def __str__(self) -> str:
+        return self.tag_type
