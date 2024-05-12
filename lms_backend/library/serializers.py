@@ -16,14 +16,18 @@ class UserSignUpSerializer(serializers.ModelSerializer):
 
 class UserLoginSerializer(serializers.Serializer):
     username=serializers.CharField()
-    password=serializers.CharField()
+    password=serializers.CharField(write_only=True)
     
     
-        
+class LibrarianBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Book
+        fields =  '__all__'
+  
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model=Book
-        fields='__all__'
+        exclude = ['created_at','id']
         extra_kwargs={'id':{'read_only':True}}
 
 class BookRequestSerializer(serializers.ModelSerializer):

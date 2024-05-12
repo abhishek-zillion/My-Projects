@@ -6,7 +6,7 @@ from django.contrib.auth.signals import user_logged_in
 from rest_framework.response import Response
 from library.models import Book, BookRequest, User
 from library.permissions import IsLibrarian
-from library.serializers import ReturnBookSerializer, UserSignUpSerializer, UserLoginSerializer, BookSerializer, BookRequestSerializer, BookRequestActionSerializer, CompleteBookRequestSerializer,RegisteredStudentSerializer
+from library.serializers import *
 from rest_framework.views import APIView
 from rest_framework import permissions, status, authentication
 from rest_framework.authtoken.models import Token
@@ -38,8 +38,6 @@ class UserLoginView(APIView):
                 username=serializer.validated_data['username'],
                 password=serializer.validated_data['password']
             )
-            reqs_upon_history=BookRequest.objects.filter(book__title='Sanskrit',returned_date=None)
-            print(reqs_upon_history)
             if user:
                 login(request, user)
                 student=request.user
@@ -71,13 +69,16 @@ class UserLogoutView(APIView):
 
 # listing all book
 
-
 class AllBooksView(generics.ListAPIView):
     queryset = Book.objects.all()
-    serializer_class = BookSerializer
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_class(self, *args, **kwargs):
+        user = self.request.user
+        if user.user_type == User.STUDENT:
+            return BookSerializer
+        return LibrarianBookSerializer
     def get_queryset(self):
         search_query = self.request.query_params.get('search')
         queryset = super().get_queryset()

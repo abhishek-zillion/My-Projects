@@ -116,6 +116,9 @@ class UserProfile(TimeStampModel):
     user = models.OneToOneField(User,verbose_name='user_detail',related_name='user_profile',on_delete=models.PROTECT)
     home_city = models.CharField(choices=HomeCityChoices.choices,max_length=50,blank=True,null=True)
     
+    def __str__(self) -> str:
+        return self.user.username
+    
 class Tag(models.Model):
     id=models.AutoField(primary_key=True)
     tag_type = models.CharField(max_length=50,blank=True,null=True)
