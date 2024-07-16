@@ -17,6 +17,20 @@ class UserSignUpSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     username=serializers.CharField()
     password=serializers.CharField(write_only=True)
+
+    # def validate(self, data):
+    #     username = data.get('username')
+    #     password = data.get('password')
+
+    #     if username and password:
+    #         user = authenticate(username=username, password=password)
+    #         if user is None:
+    #             raise serializers.ValidationError('Incorrect username or password here')
+    #     else:
+    #         raise serializers.ValidationError('Must include "username" and "password"')
+
+    #     data['user'] = user
+    #     return data
     
     
 class LibrarianBookSerializer(serializers.ModelSerializer):
@@ -29,6 +43,8 @@ class BookSerializer(serializers.ModelSerializer):
         model=Book
         exclude = ['created_at','id']
         extra_kwargs={'id':{'read_only':True}}
+        # can do it internally as def to_representation
+        
 
 class BookRequestSerializer(serializers.ModelSerializer):
     book_id=serializers.IntegerField()

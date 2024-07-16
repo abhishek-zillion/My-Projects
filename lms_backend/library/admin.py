@@ -46,3 +46,24 @@ admin.site.register(Book,BookAdmin)
 admin.site.register(BookRequest,BookRequestAdmin)
 admin.site.register(Tag,TagAdmin)
 admin.site.register(UserProfile)
+
+# from django.contrib.admin import AdminSite
+# from django.contrib.auth.decorators import user_passes_test
+# from django.urls import path
+# from two_factor.views import LoginView
+
+
+# class TwoFactorAdminSite(AdminSite):
+#     def get_urls(self):
+#         urls = super().get_urls()
+#         custom_urls = [
+#             path('login/', self.admin_login, name='login'),
+#         ]
+#         return custom_urls + urls
+
+#     @user_passes_test(lambda u: u.is_superuser)
+#     def admin_login(self, request, extra_context=None):
+#         return LoginView.as_view(template_name='admin/login.html')(request)
+
+
+# admin_site = TwoFactorAdminSite(name='myadmin')

@@ -33,7 +33,7 @@ class UserLoginView(APIView):
 
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = authenticate(
                 username=serializer.validated_data['username'],
                 password=serializer.validated_data['password']
@@ -48,6 +48,7 @@ class UserLoginView(APIView):
                 data['token']='token '+ token.key
                 data['user_type']=user.user_type
                 return Response(data, status=status.HTTP_200_OK)
+        
             else:
                 return Response({'message': 'unable to login with provided credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -60,7 +61,6 @@ class UserLogoutView(APIView):
 
     def post(self, request):
         user = request.user
-        print(user)
         if user.is_authenticated:
             Token.objects.get(user=user).delete()
             logout(request)
@@ -68,7 +68,6 @@ class UserLogoutView(APIView):
         return Response({'message': "User is not authenticated"})
 
 # listing all book
-
 class AllBooksView(generics.ListAPIView):
     queryset = Book.objects.all()
     authentication_classes = [authentication.TokenAuthentication]
@@ -144,7 +143,7 @@ class BookRequestView(generics.CreateAPIView):
             student=request.user.username
             book_id=serializer.validated_data.get('book_id')
             book_request_count.delay(int(book_id))
-            notify_librarian.delay(student)       
+            notify_librarian.delay(student, retry=True, retry_delay=20, max_retries=2)       
 
             return Response({'msg': 'Book request created successfully',}, status=status.HTTP_201_CREATED)
         else:
@@ -248,3 +247,23 @@ class RegisteredStudentView(generics.ListAPIView):
             return User.objects.filter(user_type=User.STUDENT)    
         else:
             return User.objects.filter(user=self.request.user)
+
+
+from django.views.generic import TemplateView
+from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+      
+        
+class TwoFactorAuthView(LoginRequiredMixin, TemplateView):
+    template_name = 'two_factor_auth.html'
+
+    def post(self, request, *args, **kwargs):
+        code = request.POST.get('code')
+        if code == '123456':  # Replace with actual 2FA verification logic
+            messages.success(request, "Two-Factor Authentication successful!")
+            return redirect('home')  # Redirect to the desired page after successful 2FA
+        else:
+            context = self.get_context_data(**kwargs)
+            context['error'] = "Invalid authentication code."
+            return self.render_to_response(context)

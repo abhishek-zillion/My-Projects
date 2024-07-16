@@ -1,10 +1,13 @@
 from datetime import timedelta
 from celery import shared_task
 from time import sleep
-from library.models import BookRequest, Book,User
+from library.models import BookRequest, Book, User
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+
+# student hasn't paid fees
+
 
 @shared_task(name='reject_book_request')
 def reject_book_request():
@@ -18,10 +21,13 @@ def reject_book_request():
                 print('request rejected of student1')
     return 'No new requests'
 
+# periodic checking of book
+
+ 
 @shared_task(name='stock_check')
 def stock_check(*args, **kwargs):
     message = args[0]
-    recipient = kwargs.get('recipient','apagrawal26@gmail.com')
+    recipient = kwargs.get('recipient', 'apagrawal26@gmail.com')
     book_queryset = Book.objects.all()
     for book in book_queryset:
         if book.stock == 0:
@@ -33,12 +39,12 @@ def stock_check(*args, **kwargs):
             )
             return f"{book.title},is currently unavailable"
     return 'All books are in stock'
-    
+
+# notify librarian about book request
 
 
 @shared_task(name='notify_librarian')
-def notify_librarian(student):
-    sleep(5)
+def notify_librarian(student,retry=None,retry_delay=None,max_retries=None):
     librarian_email = 'abhishekwagh420@gmail.com'
     send_mail(
         subject='New Book Request',
@@ -47,11 +53,13 @@ def notify_librarian(student):
         recipient_list=[librarian_email],
     )
     return f'email is sent regarding {student} student'
-    
+
+# book returning task
+
+
 @shared_task(name='process_book_return')
 def process_book_return(request_id):
     try:
-        sleep(30)
         print(request_id)
         book_request = BookRequest.objects.get(id=request_id)
         if book_request.status == BookRequest.APPROVED:
@@ -62,12 +70,15 @@ def process_book_return(request_id):
     except BookRequest.DoesNotExist:
         return {'success': False, 'message': 'Book request not found'}
 
+# soaring book requests
+
+
 @shared_task(name='book_request_count')
 def book_request_count(book_id):
     try:
         book_requests = BookRequest.objects.filter(book_id=book_id)
         book_request_count = len(book_requests)
-        
+
         if book_request_count >= 5:
             librarian_email = 'abhishekwagh420@gmail.com'
             subject = f'Book Requests Exceeded for Book ID {book_id}'
@@ -84,14 +95,16 @@ def book_request_count(book_id):
     except Exception as e:
         return {'success': False, 'message': f'Error occurred: {str(e)}'}
 
+# periodic logging notifications
+
 
 @shared_task(name='show_recent_logins')
 def show_recent_logins():
     threshold_time = timezone.now() - timedelta(seconds=60)
     recent_logins = User.objects.filter(login_time__gte=threshold_time)
     recent_logins_count = len(recent_logins)
-    users=''
+    users = ''
     for user in recent_logins:
         print(f"User {user.username} logged in recently at {user.login_time}")
-        users+=f"{user.username},"
-    return {'success': True, 'users':users, 'count':recent_logins_count}
+        users += f"{user.username},"
+    return {'success': True, 'users': users, 'count': recent_logins_count}

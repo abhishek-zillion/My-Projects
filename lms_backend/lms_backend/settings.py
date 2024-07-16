@@ -91,6 +91,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    # 'django_otp.plugins.otp_email',  # <- if you want email capability.
+    # 'two_factor',
+    # 'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
+    # 'two_factor.plugins.email',  # <- if you want email capability.
+    # 'two_factor.plugins.yubikey',  # <- for yubikey capability.
 ]
 
 MIDDLEWARE = [
@@ -100,6 +108,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -134,6 +143,16 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": 'lib_mgmt-sys',
+#         "USER": 'postgres',
+#         "PASSWORD": 'celsius',
+#         "HOST": 'localhost',
+#         "PORT": 5432,
+#     }
+# }
 
 
 # Password validation
@@ -197,24 +216,13 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
 
+CELERY_TASK_DEFAULT_RETRY_DELAY = 10 # will retry after 10 sec delay
+CELERY_TASK_MAX_RETRIES = 5 #will retry max 5 times
+CELERY_TASK_RETRY_BACKOFF = 'exponential' #exponential delay
+CELERY_TASK_RETRY_BACKOFF_MAX = 200 # max exponential delay 
+
 CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
-CELERY_BEAT_SCHEDULE = {
-    'reject_unpaid_requests':{
-        'task':'reject_book_request',
-        'schedule':timedelta(seconds=5),
-    },
-    'stock_check_periodic':{
-        'task':'stock_check',
-        'schedule':timedelta(seconds=5),
-        'args':['weekly checking'],
-        'kwargs':{'recipient':'abhishekwagh420@gmail.com'}
-    },
-    'show_recent_logins': {
-        'task': 'show_recent_logins',
-        'schedule': crontab(minute='*/1'), 
-    },
-}
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -222,3 +230,7 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'vires44chhh@gmail.com'
 EMAIL_HOST_PASSWORD = 'apkbrwptoziqtykj'
+
+LOGIN_URL = 'two_factor:login'
+# this one is optional
+LOGIN_REDIRECT_URL = 'two_factor:profile'
