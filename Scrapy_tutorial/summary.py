@@ -92,6 +92,15 @@ sudo apt-get install pkg-config
 sudo apt-get install libmysqlclient-dev
 pip install mysqlclient
 
+    # user_agent_list = ['Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36',
+    #                    'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
+    #                    'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
+    #                    ]
 
+yield response.follow(book_url, callback=self.parse_book_page,
+                                  headers={"User-Agent":
+                                           self.user_agent_list[
+                                               random.randint(0, len(self.user_agent_list)-1)
+                                               ]})
 
 '''
