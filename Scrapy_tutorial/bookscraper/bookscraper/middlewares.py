@@ -7,6 +7,7 @@ from scrapy import signals
 from urllib.parse import urlencode
 from random import randint
 import requests
+import logging
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -115,7 +116,7 @@ class ScrapeOpsFakeUserAgentMiddleware:
         self.scrapeops_api_key = '764739eb-12be-4d0e-9242-16f491a685fa'
         self.scrapeops_endpoint = 'https://headers.scrapeops.io/v1/user-agents'
         self.scrapeops_fake_user_agents_active = True
-        self.scrapeops_num_results = 50
+        self.scrapeops_num_results = 8
         self.header_list = []
         self._get_user_agents_list()
         self._scrapeops_fake_user_agents_enabled()
@@ -140,8 +141,23 @@ class ScrapeOpsFakeUserAgentMiddleware:
             self.scrapeops_fake_user_agents_active = True
 
     def process_request(self, request, spider):
+        if not self.scrapeops_fake_user_agents_active:
+            return
+
         random_user_agent = self._get_random_user_agent()
-        request.headers['User-Agent'] = random_user_agent
+        if not random_user_agent:
+            logging.error("No random user agent available")
+            return
+
+        keys = ['accept-language', 'sec-fetch-user', 'sec-fetch-mod', 'sec-fetch-site', 'sec-ch-ua-platform',
+                'sec-ch-ua-mobile', 'sec-ch-ua', 'accept', 'user-agent']
+
+        for key in keys:
+            if key in random_user_agent:
+                request.headers[key] = random_user_agent[key]
+
+        if 'upgrade-insecure-requests' in random_user_agent:
+            request.headers['upgrade-insecure-requests'] = random_user_agent['upgrade-insecure-requests']
 
         print("************ NEW HEADER ATTACHED *******")
-        print(request.headers['User-Agent'])
+        print(request.headers)

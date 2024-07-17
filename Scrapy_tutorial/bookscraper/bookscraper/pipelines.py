@@ -131,10 +131,10 @@ class SaveToMySQLPipeline:
 
         # Define insert statement
         self.cur.execute(""" insert into books (
-            url, 
-            title, 
-            upc, 
-            product_type, 
+            url,
+            title,
+            upc,
+            product_type,
             price_excl_tax,
             price_incl_tax,
             tax,
