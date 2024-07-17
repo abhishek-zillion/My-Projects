@@ -103,4 +103,33 @@ yield response.follow(book_url, callback=self.parse_book_page,
                                                random.randint(0, len(self.user_agent_list)-1)
                                                ]})
 
+
+can define start_urls as method of class
+scrapy shell "https://quotes.toscrape.com/page/1/"
+In [6]: response.css('title::text').re(r'Quotes.*')
+Out[6]: ['Quotes to Scrape']
+
+In [11]: response.xpath("//title/text()").get()
+Out[11]: 'Quotes to Scrape'
+
+response.xpath("//div[@class='quote']")
+response.css('div.quote')
+
+024-07-17 12:28:55 [asyncio] DEBUG: Using selector: EpollSelector
+In [16]: quote_data.xpath(".//span[@class='text']/text()")
+Out[16]: [<Selector query=".//span[@class='text']/text()" data='“It is our choices, Harry, that show ...'>]
+
+2024-07-17 12:30:29 [asyncio] DEBUG: Using selector: EpollSelector
+In [17]: quote_data.xpath(".//span[@class='text']/text()").get()
+Out[17]: '“It is our choices, Harry, that show what we truly are, far more than our abilities.”'
+
+author =  quote_data.xpath(".//small[@class='author']/text()").get()
+
+In [32]:  quote_data.xpath(".//div[@class='tags']/a/text()").getall()
+Out[32]: ['abilities', 'choices']
+
+
+In [5]: response.xpath("//li[@class='next']/a").attrib['href']
+Out[5]: '/page/2/'
+
 '''
