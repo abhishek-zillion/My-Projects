@@ -7,6 +7,7 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import mysql.connector
+import logging
 
 
 class BookscraperPipeline:
@@ -65,6 +66,31 @@ class BookscraperPipeline:
                 adapter['stars'] = 5
 
             return item
+
+
+class AuthorPipeline:
+    def process_item(self, item, spider):
+        logging.info(f"Processing item in AuthorPipeline: {item}")
+        if spider.name != 'authorspider':
+            logging.info(f"Skipping item for spider: {spider.name}")
+            return item
+
+        adapter = ItemAdapter(item)
+        fields = adapter.field_names()
+
+        for field in fields:
+            if field == 'bio':
+                value = self.clean_bio(adapter.get(field))
+                adapter[field] = value
+                logging.info(f"Cleaned bio: {value}")
+
+        return item
+
+    def clean_bio(self, value):
+        if not value:
+            return value
+        cleaned_value = " ".join(value.strip().split())
+        return cleaned_value
 
 
 class SaveToMySQLPipeline:

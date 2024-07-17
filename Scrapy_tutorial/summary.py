@@ -132,4 +132,25 @@ Out[32]: ['abilities', 'choices']
 In [5]: response.xpath("//li[@class='next']/a").attrib['href']
 Out[5]: '/page/2/'
 
+In [12]: response.xpath("//small[@class='author']/following-sibling::a")[0].attr
+    ...: ib['href']
+Out[12]: '/author/Albert-Einstein'
+
+In [21]: response.xpath("//small[@class='author']/following-sibling::a/@href").g
+    ...: etall()
+Out[21]: 
+['/author/Albert-Einstein',
+ '/author/J-K-Rowling',
+ '/author/Albert-Einstein',
+ '/author/Jane-Austen',
+ '/author/Marilyn-Monroe',
+ '/author/Albert-Einstein',
+ '/author/Andre-Gide',
+ '/author/Thomas-A-Edison',
+ '/author/Eleanor-Roosevelt',
+ '/author/Steve-Martin']
+
+
+
+
 '''
