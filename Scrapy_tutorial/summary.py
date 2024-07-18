@@ -168,4 +168,32 @@ providing a flexible way for Scrapy to create and configure your middleware.
 It's a design pattern that allows for more flexible object creation, 
 which is particularly useful in frameworks like Scrapy where 
 components need to be dynamically configured and instantiated.
+
+$ pip install scrapy-rotating-proxies
+
+can add in spider yield respons.follow.... meta={"proxy":..}
+
+ROTATING_PROXY_LIST = [
+    '43.153.177.137:13220',
+    '1170.233.117.44:5678',
+   #  '115.127.75.27:7777',
+   #  '152.26.229.88:9443'
+
+]
+DOWNLOADER_MIDDLEWARES = {
+    "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
+    'bookscraper.middlewares.ScrapeOpsFakeUserAgentMiddleware': 400,
+    'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
+    'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
+
+}
+
+"""
+import urllib
+def get_proxy_urls(url):
+    payload = {'api_key': '764739eb-12be-4d0e-9242-16f491a685fa'}
+    proxy_url = 'https://proxy.scrapeops.io/v1/?' + urllib.urlencode(payload)
+    return proxy_url
+"""
+
 '''
