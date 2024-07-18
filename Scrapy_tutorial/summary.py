@@ -196,4 +196,71 @@ def get_proxy_urls(url):
     return proxy_url
 """
 
+BOT_NAME = "bookscraper"
+This sets the name of your Scrapy project.
+
+SPIDER_MODULES = ["bookscraper.spiders"]
+Tells Scrapy where to look for spider definitions.
+
+NEWSPIDER_MODULE = "bookscraper.spiders"
+Specifies where new spiders should be created when using the genspider command.
+
+ROBOTSTXT_OBEY = False
+When set to False, Scrapy will ignore robots.txt rules. Be cautious with this setting as it may violate website policies.
+
+CONCURRENT_REQUESTS = 32 (commented out)
+If uncommented, this would set the maximum number of concurrent requests Scrapy will perform.
+
+DOWNLOAD_DELAY = 3 (commented out)
+If uncommented, this would add a delay between requests to the same website to be more polite to the server.
+
+CONCURRENT_REQUESTS_PER_DOMAIN = 16 (commented out)
+If uncommented, this would limit the number of concurrent requests to each domain.
+CONCURRENT_REQUESTS_PER_IP = 16 (commented out)
+Similar to the above, but limits based on IP address instead of domain.
+
+COOKIES_ENABLED = False (commented out)
+If uncommented and set to False, this would disable cookie handling.
+
+TELNETCONSOLE_ENABLED = False (commented out)
+If uncommented, this would disable the telnet console for debugging.
+used for debugging Scrapy spiders.
+
+DEFAULT_REQUEST_HEADERS (commented out)
+If uncommented, these would be the default headers sent with each request.
+
+EXTENSIONS (commented out)
+If uncommented, this would enable or disable Scrapy extensions.
+
+AUTOTHROTTLE_ENABLED = True (commented out)
+If uncommented, this would enable the AutoThrottle extension.
+
+
+AUTOTHROTTLE_START_DELAY = 5 (commented out)
+If AutoThrottle is enabled, this sets the initial download delay.
+
+
+AUTOTHROTTLE_MAX_DELAY = 60 (commented out)
+If AutoThrottle is enabled, this sets the maximum download delay.
+
+
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0 (commented out)
+If AutoThrottle is enabled, this sets the average number of requests Scrapy should be sending in parallel.
+
+
+AUTOTHROTTLE_DEBUG = False (commented out)
+If uncommented and set to True, this would enable AutoThrottle debugging.
+
+
+HTTPCACHE_ENABLED = True (commented out)
+If uncommented, this would enable HTTP caching.
+
+
+REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
+This sets the request fingerprinter implementation to use.
+
+
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+This specifies the reactor Twisted should use.
+
 '''

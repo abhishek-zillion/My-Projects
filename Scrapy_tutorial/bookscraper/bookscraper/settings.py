@@ -56,7 +56,7 @@ ROBOTSTXT_OBEY = False
 DOWNLOADER_MIDDLEWARES = {
    #  "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
     'bookscraper.middlewares.ScrapeOpsFakeUserAgentMiddleware': 400,
-   #  'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
+    # 'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
    #  'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
    #  'scrapeops_scrapy_proxy_sdk.scrapeops_scrapy_proxy_sdk.ScrapeOpsScrapyProxySdk': 720
 
@@ -107,9 +107,9 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 ROTATING_PROXY_LIST = [
     '43.153.177.137:13220',
-    '1170.233.117.44:5678',
-   #  '115.127.75.27:7777',
-   #  '152.26.229.88:9443'
+    '34.140.150.176:3128',
+    '80.228.235.6:80',
+    '152.26.229.88:9443'
 
 ]
 
