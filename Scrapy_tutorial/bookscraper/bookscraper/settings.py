@@ -118,3 +118,14 @@ ROTATING_PROXY_LIST = [
 SCRAPEOPS_API_KEY = '764739eb-12be-4d0e-9242-16f491a685fa'
 SCRAPEOPS_PROXY_ENABLED = True
 SCRAPEOPS_PROXY_SETTINGS = {'country': 'us'}
+
+TELNETCONSOLE_ENABLED = False
+
+# Mail settings
+MAIL_FROM = 'vires44chhh@gmail.com'
+MAIL_HOST = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USER = 'vires44chhh@gmail.com'
+MAIL_PASS = 'apkbrwptoziqtykj'
+MAIL_TLS = True
+MAIL_SSL = False

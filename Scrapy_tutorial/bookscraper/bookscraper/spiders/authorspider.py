@@ -9,7 +9,8 @@ class AuthorspiderSpider(scrapy.Spider):
     custom_settings = {
         'ITEM_PIPELINES': {"bookscraper.pipelines.AuthorPipeline": 400},
         'FEEDS': {
-            './quotes_data/author_data.json': {'format': 'json', 'overwrite': True}
+            './quotes_data/author_data.json': {'format': 'json', 'overwrite':
+                                               True}
         }
     }
 

@@ -13,7 +13,8 @@ class QuotespiderSpider(scrapy.Spider):
     custom_settings = {
         'ITEM_PIPELINES': {},
         'FEEDS': {
-            './quotes_data/quotes_data.json': {'format': 'json', 'overwrite': True}
+            './quotes_data/quotes_data.json': {'format': 'json',
+                                               'overwrite': True}
         }
     }
 
@@ -40,6 +41,13 @@ class QuotespiderSpider(scrapy.Spider):
                 'author': author,
                 'tags': tags,
             }
+        # crawling upon tags
+        tags = response.xpath('//div[@class="tags"]/a/text()').getall()
+        for tag in tags:
+            yield {
+                'tag': tag
+            }
+
         try:
             next_page = response.xpath(".//li[@class='next']/a").attrib['href']
             if next_page is not None:
