@@ -7,5 +7,5 @@ def workbook_creation():
     sheet = excel.active
     sheet.title = 'Top 250 movies'
     sheet.append(['Rank', "Name", "Year of release",
-                  "Watchtime", "Rating", "Voted users"])
+                  "Watchtime", "Rating", "Voted users","Image Path"])
     return excel, sheet

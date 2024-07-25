@@ -1,5 +1,8 @@
+import shutil
+import requests
 from bs4 import BeautifulSoup
 from selenium_ import selenium_config, excel
+import os
 
 
 def imdb_rating_extraction():
@@ -16,6 +19,8 @@ def imdb_rating_extraction():
         movies_list = soup.find(
             'ul', class_='ipc-metadata-list ipc-metadata-list--dividers-between sc-a1e81754-0 eBRbsI compact-list-view ipc-metadata-list--base')
 
+        movie_posters_dir = os.path.join(os.getcwd(), 'movie_posters')
+        os.makedirs(movie_posters_dir, exist_ok=True)
         for movie in movies_list.find_all('li'):
             movie: BeautifulSoup
             name_data: str = movie.find('h3').get_text(strip=True)
@@ -38,9 +43,41 @@ def imdb_rating_extraction():
                 'span', class_="ipc-rating-star--voteCount").text.strip()
             voted_users = voted_users_unformatted[1:-1]
             print(rank, name, year, watchtime, rating, voted_users)
-            sheet.append([rank, name, year, watchtime, rating, voted_users])
+
+            img_element = movie.find('img', class_='ipc-image')
+            if img_element:
+                img_url = img_element['src']
+                srcset = img_element.get('srcset')
+                if srcset:
+                    largest_img = srcset.strip().split(' ')[-2]
+                    if largest_img:
+                        img_url = largest_img
+                img_name = f"{rank}_{name.replace(' ','_')}.jpg"
+
+                img_path = os.path.join(movie_posters_dir, img_name)
+
+                print('->', img_path)
+
+                response = requests.get(img_url)
+                if response.status_code == 200:
+                    with open(img_path, 'wb') as file:
+                        file.write(response.content)
+                        print(f'Image saved successfully:{img_name}')
+                else:
+                    print(f"Failed to download image for {img_name}")
+                    img_path = "NA"
+                sheet.append([rank, name, year, watchtime,
+                             rating, voted_users, img_path])
+
+            else:
+                print(f"No image found for {name}")
+                sheet.append([rank, name, year, watchtime,
+                             rating, voted_users, "NA"])
 
         excel_obj.save('IMDB_movie_rating.xlsx')
+        answer = input('Do you want to delete images folder? (y/n)')
+        if answer.lower() == 'y':
+            shutil.rmtree(movie_posters_dir)
         selenium_obj.quit()
 
     except Exception as e:
