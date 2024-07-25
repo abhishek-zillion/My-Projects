@@ -67,7 +67,7 @@ class Booking(webdriver.Chrome):
             search_field.clear()
             time.sleep(2)  # Wait for the dropdown to load
             search_field.send_keys(place_to_go)
-
+            time.sleep(2)
             first_result = WebDriverWait(self, 10).until(
                 EC.element_to_be_clickable((By.ID, 'autocomplete-result-0'))
             )
