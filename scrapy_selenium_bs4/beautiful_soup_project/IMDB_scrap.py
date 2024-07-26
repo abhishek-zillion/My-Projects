@@ -72,7 +72,7 @@ def imdb_rating_extraction():
                               rating, voted_users, "NA"])
 
         excel_obj.save('IMDB_movie_rating.xlsx')
-        answer = input('Do you want to delete images folder? (y/n)')
+        answer = input('Do you want to delete images folder? (Y/N)')
     except Exception as e:
         print(f"Error occurred: {e}")
     if answer.lower() == 'y':
