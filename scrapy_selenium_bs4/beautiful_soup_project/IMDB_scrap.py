@@ -11,14 +11,12 @@ def imdb_rating_extraction():
     from IMDB website and saving the data in an Excel file.
     '''
     excel_obj, sheet = excel.workbook_creation()
+    selenium_obj = selenium_config.Selenium()
+    page_source = selenium_obj.land_page()
     try:
-        selenium_obj = selenium_config.Selenium()
-        page_source = selenium_obj.land_page()
-
         soup = BeautifulSoup(page_source, 'html.parser')
         movies_list = soup.find(
-            'ul', class_='ipc-metadata-list ipc-metadata-list--dividers-between sc-a1e81754-0 eBRbsI compact-list-view ipc-metadata-list--base')
-
+            'ul', {'class': 'ipc-metadata-list', 'role': 'presentation'})
         movie_posters_dir = os.path.join(os.getcwd(), 'movie_posters')
         os.makedirs(movie_posters_dir, exist_ok=True)
         for movie in movies_list.find_all('li'):
@@ -30,11 +28,10 @@ def imdb_rating_extraction():
 
             first_space_index: int = name_data.find(' ')
             name: str = name_data[first_space_index+1:]
-
-            year_and_time = movie.find_all(
-                'span', class_='sc-b189961a-8 kLaxqf cli-title-metadata-item')
-            year = year_and_time[0].text
-            watchtime: str = year_and_time[1].text
+            spans = movie.select(
+                '.cli-title-metadata .cli-title-metadata-item')
+            year = spans[0].text
+            watchtime = spans[1].text
             watchtime = ''.join(watchtime.split())
 
             rating = movie.find('span', class_="ipc-rating-star--rating").text
@@ -67,21 +64,20 @@ def imdb_rating_extraction():
                     print(f"Failed to download image for {img_name}")
                     img_path = "NA"
                 sheet.append([rank, name, year, watchtime,
-                             rating, voted_users, img_path])
+                              rating, voted_users, img_path])
 
             else:
                 print(f"No image found for {name}")
                 sheet.append([rank, name, year, watchtime,
-                             rating, voted_users, "NA"])
+                              rating, voted_users, "NA"])
 
         excel_obj.save('IMDB_movie_rating.xlsx')
         answer = input('Do you want to delete images folder? (y/n)')
-        if answer.lower() == 'y':
-            shutil.rmtree(movie_posters_dir)
-        selenium_obj.quit()
-
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Error occurred: {e}")
+    if answer.lower() == 'y':
+        shutil.rmtree(movie_posters_dir)
+    selenium_obj.quit()
 
 
 if __name__ == "__main__":
