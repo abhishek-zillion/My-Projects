@@ -1,3 +1,5 @@
+import uuid
+import os
 from datetime import datetime, timedelta
 from jose import JWTError, jwt, ExpiredSignatureError
 from fastapi import HTTPException, status, Depends
@@ -5,12 +7,12 @@ from app.database.session import get_db
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
-from app.models.book import User
-import os
+from app.models.book import User, RefreshToken
 from app.static import (
     SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_TOKEN_EXPIRE_DAYS
 )
 
 
@@ -43,6 +45,21 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token(user_id: str,
+                         db: Session = Depends(get_current_user)):
+    refresh_token = str(uuid.uuid4())
+    expires = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    db_refresh_token = RefreshToken(
+        token=refresh_token,
+        user_id=user_id,
+        expires=expires,
+    )
+    db.add(db_refresh_token)
+    db.commit()
+    db.refresh(db_refresh_token)
+    return refresh_token
 
 
 def verify_token(token: str):

@@ -1,5 +1,5 @@
 from app.database.session import Base
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime
 from enum import Enum as PyEnum
 from sqlalchemy.orm import relationship
 
@@ -25,6 +25,7 @@ class User(Base):
     password = Column(String(255), nullable=False)
 
     book_requests = relationship("BookRequest", back_populates='user')
+    refresh_token = relationship("RefreshToken", back_populates='user')
 
 
 class Book(Base):
@@ -47,3 +48,13 @@ class BookRequest(Base):
 
     user = relationship('User', back_populates='book_requests')
     book = relationship('Book', back_populates='book_requests')
+
+
+class RefreshToken(Base):
+    __tablename__ = 'refresh_token'
+    id = Column(Integer, primary_key=True)
+    token = Column(String(255), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    expires = Column(DateTime)
+
+    user = relationship("User", back_populates='refresh_token')

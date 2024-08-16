@@ -1,4 +1,4 @@
 .vscode
-lms_env
+lms_fastapi_env
 __pycache__
 flask_tutorial

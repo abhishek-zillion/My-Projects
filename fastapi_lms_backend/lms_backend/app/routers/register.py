@@ -3,10 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.schemas.book import User as UserSchema, UserDisplay, Token
 from app.database.session import get_db
-from app.models.book import User, UserRole
+from app.models.book import User, UserRole, RefreshToken
 from fastapi.security import OAuth2PasswordRequestForm
 from app.utils import (create_access_token, pwd_context, verify_password,
-                       oauth2_scheme, project_root, verify_token)
+                       create_refresh_token,
+                       oauth2_scheme, project_root,
+                       )
 import json
 from datetime import datetime
 
@@ -45,7 +47,26 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(),
                             detail="Incorrect username or password")
 
     access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(user_id=user.id, db=db)
+    return {"access_token": access_token, "refresh_token": refresh_token,
+            "token_type": "bearer"}
+
+
+@router.post('/token/refresh', )
+def refresh_token(refresh_token: str,  db: Session = Depends(get_db)):
+    refresh_token_db: RefreshToken = db.query(RefreshToken).filter(
+        RefreshToken.token == refresh_token).first()
+    if not refresh_token_db:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid refresh token")
+    if datetime.utcnow() > refresh_token_db.expires:
+        db.delete(refresh_token_db)
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Expired refresh token")
+    user = refresh_token_db.user
+    new_access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": new_access_token}
 
 
 def save_revoked_token(token: str):
@@ -60,17 +81,3 @@ def save_revoked_token(token: str):
 def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     save_revoked_token(token)
     return {"message": "Logout successful"}
-
-
-# @router.post('/refresh-token', response_model=Token)
-# def refresh_token(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     # Verify the refresh token
-#     username = verify_token(token)  # This will raise an exception if the token is invalid or expired
-#     user = db.query(User).filter(User.username == username).first()
-#     if not user:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail="User not found")
-
-#     # Generate a new access token
-#     access_token = create_access_token(data={"sub": user.username})
-#     return {"access_token": access_token, "token_type": "bearer"}
