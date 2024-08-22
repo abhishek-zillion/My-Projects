@@ -8,11 +8,18 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from app.models.book import User, RefreshToken
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from app.static import (
     SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
-    REFRESH_TOKEN_EXPIRE_DAYS
+    REFRESH_TOKEN_EXPIRE_DAYS,
+    SMTP_PORT,
+    SMTP_PASSWORD,
+    SMTP_SERVER,
+    SMTP_USER
 )
 
 
@@ -78,3 +85,27 @@ def verify_token(token: str):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Could not validate credentials")
+
+
+def send_email(subject: str, body: str, to_email: str):
+    smtp_server = SMTP_SERVER
+    smtp_port = SMTP_PORT
+    smtp_user = SMTP_USER
+    smtp_password = SMTP_PASSWORD
+
+    msg = MIMEMultipart()
+    msg['From'] = smtp_user
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, to_email, msg.as_string())
+            print("Email sent successfully")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Email sending failed: {str(e)}")

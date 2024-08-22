@@ -11,7 +11,6 @@ router = APIRouter()
 @router.get('/total-books', response_model=TotalBooks)
 def get_total_books(db: Session = Depends(get_db)):
     total = db.query(Book).count()
-    print(total)
     if total == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='No books found')

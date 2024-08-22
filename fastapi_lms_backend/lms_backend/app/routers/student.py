@@ -8,6 +8,7 @@ from app.database.session import get_db
 from app.models.book import (Book, User, BookRequest as BookRequestModel,
                              UserRole, RequestStatus)
 from app.utils import get_current_user
+from app.celery_settings.tasks import check_stock_status
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -54,6 +55,7 @@ def create_book_request(book_id: int, db: Session = Depends(get_db),
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Book is out of stock')
+    check_stock_status.apply_async()
     db.add(new_request)
     db.commit()
     db.refresh(new_request)

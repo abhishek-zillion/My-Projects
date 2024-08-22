@@ -11,6 +11,7 @@ from app.models.book import (Book, User, BookRequest as BookRequestModel,
                              UserRole, RequestStatus)
 from typing import List
 from app.utils import get_current_user
+from app.celery_settings.tasks import check_stock_status
 
 router = APIRouter()
 
@@ -20,6 +21,7 @@ def get_books(db: Session = Depends(get_db),
               current_user: User = Depends(get_current_user)):
 
     books = db.query(Book).all()
+    check_stock_status.apply_async()
     if not books:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail='Books not found')

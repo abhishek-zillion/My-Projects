@@ -1,8 +1,9 @@
+from sqlalchemy import text
 import unittest
+import logging
 from fastapi.testclient import TestClient
 from app.main import app, pwd_context
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 from app.models.book import User, Book, BookRequest, UserRole
 from app.utils import create_access_token
 from app.static import (
@@ -21,6 +22,22 @@ from app.test.testing_db import (
 override_get_db()
 override_dependencies()
 
+logging.basicConfig(level=logging.DEBUG)
+
+
+def teardown_database():
+    logging.debug("Starting database teardown")
+    try:
+        with create_engine_.connect() as connection:
+            logging.debug(f"Dropping database {TEST_DB_NAME}")
+            connection.execute(text(f"DROP DATABASE IF EXISTS {TEST_DB_NAME}"))
+            connection.commit()
+        logging.debug('Database dropped successfully')
+    except Exception as e:
+        logging.error(f"Error during database teardown: {str(e)}")
+    finally:
+        logging.debug("Finished database teardown")
+
 
 class TestGeneralEndpoint(unittest.TestCase):
     @classmethod
@@ -30,18 +47,27 @@ class TestGeneralEndpoint(unittest.TestCase):
                 text(f"CREATE DATABASE IF NOT EXISTS {TEST_DB_NAME}"))
         TestBase.metadata.create_all(bind=test_engine)
         cls.client = TestClient(app)
-
         db = TestSessionLocal()
         cls.create_sample_data(db)
-        # cls.access_token = cls.get_access_token(db)
+        cls.access_token = cls.get_access_token(db)
 
     @classmethod
     def tearDownClass(cls):
-        TestBase.metadata.drop_all(bind=test_engine)
-        with test_engine.connect() as connection:
-            connection.execute(text(f"DROP DATABASE IF EXISTS {TEST_DB_NAME}"))
-            connection.commit()
-            print('DB DROPPED')
+        logging.debug("Starting tearDownClass")
+        try:
+            logging.debug("Closing all sessions")
+            TestSessionLocal.close_all()
+
+            logging.debug("Disposing test engine")
+            test_engine.dispose()
+
+            logging.debug("In-memory cleanup completed")
+        except Exception as e:
+            logging.error(f"Error during in-memory cleanup: {str(e)}")
+        finally:
+            teardown_database()
+
+            logging.debug("Finished tearDownClass")
 
     @classmethod
     def get_access_token(cls, db: Session):
