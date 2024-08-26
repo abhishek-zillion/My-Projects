@@ -18,7 +18,8 @@ class ShowBook(BaseModel):
     stock: int
 
     class Config:
-        orm_mode = True
+        #instead of orm mode
+        from_attributes = True
 
 
 class User(BaseModel):
@@ -37,7 +38,7 @@ class BookRequest(BaseModel):
     book_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserResponse(BaseModel):
@@ -57,7 +58,7 @@ class BookRequestResponse(BaseModel):
     book: BookResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BookResponseWithID(BookResponse):
@@ -71,7 +72,7 @@ class RequestHistory(BaseModel):
     requests: List[BookResponseWithID]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BookRequestHistory(BaseModel):
@@ -79,7 +80,7 @@ class BookRequestHistory(BaseModel):
     total_reqs: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Token(BaseModel):
@@ -104,7 +105,7 @@ class UpdateBookPut(BaseModel):
     stock: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UpdateBookPatch(BaseModel):
@@ -114,7 +115,7 @@ class UpdateBookPatch(BaseModel):
     stock: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ActionUponBook(BaseModel):
@@ -126,3 +127,6 @@ class BookData(BaseModel):
     publication_year: int
     genre: str
     stock: int
+
+    class Config:
+        from_attributes = True

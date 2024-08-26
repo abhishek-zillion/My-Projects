@@ -1,14 +1,14 @@
 from sqlalchemy import text
 import unittest
 import logging
+import json
 from fastapi.testclient import TestClient
-from app.main import app, pwd_context
-from sqlalchemy.orm import Session
+from app.main import app
+from sqlalchemy.orm import Session, close_all_sessions
 from app.models.book import User, Book, BookRequest, UserRole
 from app.utils import create_access_token
-from app.static import (
-    TEST_DB_NAME,
-)
+from app.celery_settings.tasks import *
+from app.static import TEST_DB_NAME
 
 from app.test.testing_db import (
     create_engine_,
@@ -16,16 +16,29 @@ from app.test.testing_db import (
     TestSessionLocal,
     TestBase,
     override_get_db,
-    override_dependencies
+    override_dependencies,
+    factory_objects
 )
+from unittest.mock import Mock, patch
 
-override_get_db()
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+
+# Override dependencies
+# override_get_db()
 override_dependencies()
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def teardown_database():
+    '''
+    This function either cleans up the database
+    or remove tables from the database
+    '''
     logging.debug("Starting database teardown")
     try:
         with create_engine_.connect() as connection:
@@ -47,16 +60,52 @@ class TestGeneralEndpoint(unittest.TestCase):
                 text(f"CREATE DATABASE IF NOT EXISTS {TEST_DB_NAME}"))
         TestBase.metadata.create_all(bind=test_engine)
         cls.client = TestClient(app)
-        db = TestSessionLocal()
-        cls.create_sample_data(db)
-        cls.access_token = cls.get_access_token(db)
+        cls.db = TestSessionLocal()
+        cls.create_sample_data(cls.db)
+        cls.access_token = cls.get_access_token(cls.db)
+        cls.load_data_from_json_files()
+
+    @classmethod
+    def load_data_from_json_files(cls):
+        """
+        Load data from JSON files and populate the database.
+        """
+        try:
+            with open('../dump_data/book.json', 'r') as file:
+                books = json.load(file)
+            with open('../dump_data/user.json', 'r') as file:
+                users = json.load(file)
+            with open('../dump_data/book_request.json', 'r') as file:
+                book_requests = json.load(file)
+
+            db = TestSessionLocal()
+            try:
+                for book in books:
+                    db.add(Book(**book))
+                for user in users:
+                    db.add(User(**user))
+                for book_request in book_requests:
+                    db.add(BookRequest(**book_request))
+                db.commit()
+                logging.debug("Data loaded successfully from JSON files")
+            except Exception as e:
+                db.rollback()
+                logging.error(f"Error loading data into database: {str(e)}")
+            finally:
+                db.close()
+        except Exception as e:
+            logging.error(f"Error reading JSON files: {str(e)}")
 
     @classmethod
     def tearDownClass(cls):
+        '''
+        Can either drop the database
+        or truncate the database
+        '''
         logging.debug("Starting tearDownClass")
         try:
             logging.debug("Closing all sessions")
-            TestSessionLocal.close_all()
+            close_all_sessions()
 
             logging.debug("Disposing test engine")
             test_engine.dispose()
@@ -65,8 +114,7 @@ class TestGeneralEndpoint(unittest.TestCase):
         except Exception as e:
             logging.error(f"Error during in-memory cleanup: {str(e)}")
         finally:
-            teardown_database()
-
+            TestBase.metadata.drop_all(bind=test_engine)
             logging.debug("Finished tearDownClass")
 
     @classmethod
@@ -78,32 +126,43 @@ class TestGeneralEndpoint(unittest.TestCase):
 
     @classmethod
     def create_sample_data(cls, db: Session):
-        user_1 = User(username='admin', role=UserRole.ADMIN,
-                      password=pwd_context.hash('admin'))
-        user_2 = User(username='guest', role=UserRole.GUEST,
-                      password=pwd_context.hash('guest'))
-        user_3 = User(username='student', role=UserRole.STUDENT,
-                      password=pwd_context.hash('student'))
-        book1 = Book(title='The Great Gatsby', genre='Fiction',
-                     publication_year=1925, stock=5)
-        book2 = Book(title='1984', genre='Dystopian',
-                     publication_year=1949, stock=3)
-        book3 = Book(title='To Kill a Mockingbird', genre='Fiction',
-                     publication_year=1960, stock=4)
-        db.add_all([user_1, user_2, user_3, book1, book2, book3])
-        db.commit()
-
-        request1 = BookRequest(user_id=user_2.id, book_id=book1.id)
-        request2 = BookRequest(user_id=user_2.id, book_id=book2.id)
-        request3 = BookRequest(user_id=user_3.id, book_id=book3.id)
-        db.add_all([request1, request2, request3])
+        db.add_all([data for data in factory_objects()])
         db.commit()
 
     def test_get_book(self):
-        print("Test get_book")
         response = self.client.get("/general/1")
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json(), dict)
+
+    def test_signup(self):
+        data = {
+            "username": "test_1",
+            "role": UserRole.GUEST,
+            "password": 'password'
+        }
+
+        response = self.client.post("auth/signup", json=data)
+        data = response.json()
+        self.assertEqual(data['username'], "test_1")
+        self.assertIsNotNone(data['role'])
+        self.assertIsNone(data.get('password'))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.routers.book.check_stock_status')
+    def test_get_all_books(self,
+                           mock_check_stock_status):
+
+        mock_check_stock_status.apply_async.return_value = 'OK'
+
+        headers = {
+            "Authorization": f"Bearer {self.access_token}"
+        }
+        response = self.client.get("/books/all-books", headers=headers)
+        # print('checking mock status', check_stock_status())
+        # print(response.json(), sep=' ')
+        self.assertEqual(response.status_code, 200)
+        mock_check_stock_status.apply_async.assert_called_once()
+        self.assertIsInstance(response.json(), list)
 
 
 if __name__ == '__main__':

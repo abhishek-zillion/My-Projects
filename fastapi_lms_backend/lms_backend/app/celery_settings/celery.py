@@ -1,6 +1,6 @@
 from celery import Celery
 
-app = Celery(
+celery_app = Celery(
     __name__,
     broker='redis://localhost:6380/0',
     backend='redis://localhost:6380/0',
@@ -9,7 +9,7 @@ app = Celery(
 
 # import app.celery_settings.tasks
 
-app.conf.beat_schedule = {
+celery_app.conf.beat_schedule = {
     'check-stock-status-every-hour': {
         'task': 'app.celery_settings.tasks.check_stock_status',
         'schedule': 3600.0,
@@ -21,7 +21,7 @@ app.conf.beat_schedule = {
 }
 
 
-@app.task
+@celery_app.task
 def add(x: int, y: int):
     return x + y
 

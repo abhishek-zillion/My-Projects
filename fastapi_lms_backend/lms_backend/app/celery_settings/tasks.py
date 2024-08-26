@@ -1,10 +1,10 @@
-from app.celery_settings.celery import app
+from app.celery_settings.celery import celery_app
 from app.database.session import SessionLocal
 from app.models.book import Book, BookRequest, RequestStatus
 from app.utils import send_email
 
 
-@app.task
+@celery_app.task
 def check_stock_status():
     db = SessionLocal()
     try:
@@ -17,7 +17,7 @@ def check_stock_status():
         db.close()
 
 
-@app.task
+@celery_app.task
 def check_pending_request():
     db = SessionLocal()
     try:
