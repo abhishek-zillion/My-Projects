@@ -14,7 +14,7 @@ app = FastAPI(
 )
 
 # app.include_router(register.router, prefix="/auth", tags=["Authentication"])
-app.include_router(walmart.scrape_walmart,
+app.include_router(walmart.router,
                    prefix="/all-products", tags=["All Products"])
 
 # Base.metadata.drop_all(engine)

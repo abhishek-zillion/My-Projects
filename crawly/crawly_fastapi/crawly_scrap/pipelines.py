@@ -5,10 +5,14 @@
 
 
 # useful for handling different item types with a single interface
-from psycopg2 import OperationalError
 import psycopg2
+import os
+from psycopg2 import OperationalError
 from scrapy.exceptions import DropItem
 from itemadapter import ItemAdapter
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class WalmartPipeline:
@@ -24,10 +28,10 @@ class SaveToPostgresPipeline:
     def __init__(self):
         try:
             self.conn = psycopg2.connect(
-                host='localhost',
-                user='postgres',
-                password='celsius',
-                dbname='walmart'
+                host=os.getenv('DB_HOST'),
+                user=os.getenv('DB_USER'),
+                password=os.getenv('DB_PASSWORD'),
+                dbname=os.getenv('DB_NAME')
             )
             self.cursor = self.conn.cursor()
             self.cursor.execute("""
@@ -57,7 +61,7 @@ class SaveToPostgresPipeline:
             raise DropItem(
                 f"Duplicate URL found and skipped: {adapter['url']}")
         except Exception as e:
-            self.conn.rollback()  # Rollback the transaction on error
+            self.conn.rollback()
             print(f"Error saving item to database: {e}")
         return item
 
